@@ -111,7 +111,19 @@ public class BoardService : IBoardService
                                     && x.Coordinates.Column >= startcolumn
                                     && x.Coordinates.Row <= endrow
                                     && x.Coordinates.Column <= endcolumn).ToList();
-                    if (affectedPanels.Any(x => x.IsOccupiedByShip()))
+                    
+                    bool hasAdjacentOccupiedFields = false;
+                    foreach (var panel in affectedPanels)
+                    {
+                        var adjacentFields = GetAdjacentFields(panel.Coordinates.Row, panel.Coordinates.Column);
+                        if (adjacentFields.Any(x => x.IsOccupiedByShip()))
+                        {
+                            hasAdjacentOccupiedFields = true;
+                            break;
+                        }
+                    }
+                    
+                    if (affectedPanels.Any(x => x.IsOccupiedByShip()) || hasAdjacentOccupiedFields)
                     {
                         isOpen = true;
                         continue;
@@ -126,6 +138,32 @@ public class BoardService : IBoardService
                 }
             }
         });
-        
+    }
+    
+    private List<Field?> GetAdjacentFields(int row, char column)
+    {
+        var adjacentFields = new List<Field?>();
+        if (row > 1)
+        {
+            var topRow = row - 1;
+            adjacentFields.Add(_firingBoard.Fields.FirstOrDefault(x => x.Coordinates.Row == topRow && x.Coordinates.Column == column));
+        }
+        if (row < 10)
+        {
+            var bottomRow = row + 1;
+            adjacentFields.Add(_firingBoard.Fields.FirstOrDefault(x => x.Coordinates.Row == bottomRow && x.Coordinates.Column == column));
+        }
+        if (column > 'A')
+        {
+            var leftColumn = (char)(column - 1);
+            adjacentFields.Add(_firingBoard.Fields.FirstOrDefault(x => x.Coordinates.Row == row && x.Coordinates.Column == leftColumn));
+        }
+        if (column < 'J')
+        {
+            var rightColumn = (char)(column + 1);
+            adjacentFields.Add(_firingBoard.Fields.FirstOrDefault(x => x.Coordinates.Row == row && x.Coordinates.Column == rightColumn));
+        }
+
+        return adjacentFields;
     }
 }
